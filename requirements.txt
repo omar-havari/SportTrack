@@ -1,0 +1,6 @@
+pandas
+requests
+jupyter
+rapidfuzz
+pytest
+python-dotenv
