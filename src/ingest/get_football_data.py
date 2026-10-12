@@ -36,12 +36,22 @@ teams_path = football_raw_data_path / "teams"
 matches_path.mkdir(parents = True, exist_ok = True)
 teams_path.mkdir(parents = True, exist_ok = True)
 
+# Creating time stamp for file formatting
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
+# Writing results in json files
 matches_json_file = matches_path / f"matches_PL_season_2025-2026_time{timestamp}.json"
 teams_json_file = teams_path / f"teams_PL_season_2025-2026_time{timestamp}.json"
-with open(matches_json_file, "w", encoding="utf-8") as m:
-    json.dump(PL_matches_response.json(), m, indent = 2)
 
-with open(teams_json_file, "w", encoding="utf-8") as t:
-    json.dump(teams_response.json(), t, indent = 2)
+def write_json(endpoint_param: str):
+    if endpoint_param == "matches":
+        json_file = matches_path / f"matches_PL_season_2025-2026_time{timestamp}.json"
+        with open(json_file, "w", encoding="utf-8") as j:
+            json.dump(PL_matches_response.json(), j, indent = 2)
+    elif endpoint_param == "teams":
+        json_file = teams_path / f"teams_PL_season_2025-2026_time{timestamp}.json"
+        with open(json_file, "w", encoding="utf-8") as j:
+            json.dump(teams_response.json(), j, indent = 2)
+
+write_json("matches")
+write_json("teams")
