@@ -8,7 +8,7 @@ inconsistent names and IDs, and builds clean stats tables in SQLite.
 
 ## Status
 
-Phase 0 (environment setup) in progress.
+Phase 2 (data processing from API) in progress!
 
 ## Setup
 
