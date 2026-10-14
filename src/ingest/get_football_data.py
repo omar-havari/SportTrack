@@ -25,9 +25,18 @@ PL_matches_response = requests.get(PL_matches_endpoint, headers = headers, param
 teams_response = requests.get(teams_endpoint, headers = headers, params = params)
 
 
-#  Checking if responses aren't valid
-if PL_matches_response.status_code != 200 or teams_response.status_code != 200:
-    sys.exit("Couldn't establish connection!")
+failed = False
+
+if PL_matches_response.status_code != 200:
+    print(f"matches request failed with status {PL_matches_response.status_code}: {PL_matches_response.text}")
+    failed = True
+
+if teams_response.status_code != 200:
+    print(f"teams request failed with status {teams_response.status_code}: {teams_response.text}")
+    failed = True
+
+if failed:
+    sys.exit(1)
 
 #  Creating paths to store the raw data from both endpoints, also handling if they exist prior to this script
 football_raw_data_path = Path("data/raw/football_data")
