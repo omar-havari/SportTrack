@@ -19,10 +19,15 @@ teams_endpoint = "https://api.football-data.org/v4/competitions/PL/teams"
 #  Headers and parameters for the requests to the endpoints
 headers = {"X-Auth-Token": API_KEY}
 params = {"season": 2025}
+timeout = 5
 
 #  Storing responses in variables
-PL_matches_response = requests.get(PL_matches_endpoint, headers = headers, params = params)
-teams_response = requests.get(teams_endpoint, headers = headers, params = params)
+try:
+    PL_matches_response = requests.get(PL_matches_endpoint, headers = headers, params = params, timeout = timeout)
+    teams_response = requests.get(teams_endpoint, headers = headers, params = params, timeout = timeout)
+except requests.exceptions.RequestException as error:
+    print(f"There was an error: {error}")
+    sys.exit(1)
 
 
 failed = False
@@ -48,10 +53,7 @@ teams_path.mkdir(parents = True, exist_ok = True)
 # Creating time stamp for file formatting
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-# Writing results in json files
-matches_json_file = matches_path / f"matches_PL_season_2025-2026_time{timestamp}.json"
-teams_json_file = teams_path / f"teams_PL_season_2025-2026_time{timestamp}.json"
-
+# Function that creates json files
 def write_json(endpoint_param: str):
     if endpoint_param == "matches":
         json_file = matches_path / f"matches_PL_season_2025-2026_time{timestamp}.json"
