@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import sys
 from pathlib import Path
 from datetime import datetime
+import time
 
 load_dotenv()  # Used to read API key from the .env file
 
@@ -20,28 +21,40 @@ teams_endpoint = "https://api.football-data.org/v4/competitions/PL/teams"
 headers = {"X-Auth-Token": API_KEY}
 params = {"season": 2025}
 timeout = 5
+max_retries = 3
 
-#  Storing responses in variables
-try:
-    PL_matches_response = requests.get(PL_matches_endpoint, headers = headers, params = params, timeout = timeout)
-    teams_response = requests.get(teams_endpoint, headers = headers, params = params, timeout = timeout)
-except requests.exceptions.RequestException as error:
-    print(f"There was an error: {error}")
-    sys.exit(1)
+def fetch(url: str, name: str):
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = requests.get(url, headers = headers, params = params, timeout = timeout)
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as error:
+            print(f"{name} requests error: {error} (attempt {attempt} / {max_retries})")
+            time.sleep(5)
+            continue
+        except requests.exceptions.RequestException as error:
+            sys.exit(f"{name} request failed: {error}")
 
+        if response.status_code == 200:
+            return response
 
-failed = False
+        if response.status_code == 429:
+            wait = int(response.headers.get("X-RequestCounter-Reset", 60))
+            print(f"{name} request rate limited, waiting {wait}s (attempt {attempt} / {max_retries})")
+            time.sleep(wait)
+            continue
 
-if PL_matches_response.status_code != 200:
-    print(f"matches request failed with status {PL_matches_response.status_code}: {PL_matches_response.text}")
-    failed = True
+        if response.status_code >= 500:
+            print(f"{name} request got server error {response.status_code} (attempt {attempt} / {max_retries})")
+            time.sleep(5)
+            continue
 
-if teams_response.status_code != 200:
-    print(f"teams request failed with status {teams_response.status_code}: {teams_response.text}")
-    failed = True
+        sys.exit(f"{name} request failed with status {response.status_code}: {response.text}")
 
-if failed:
-    sys.exit(1)
+    sys.exit(f"{name} request failed after {max_retries} attempts")
+
+PL_matches_response = fetch(PL_matches_endpoint, "matches")
+teams_response = fetch(teams_endpoint, "teams")
+
 
 #  Creating paths to store the raw data from both endpoints, also handling if they exist prior to this script
 football_raw_data_path = Path("data/raw/football_data")
